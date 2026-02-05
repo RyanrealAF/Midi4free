@@ -36,7 +36,12 @@ app = FastAPI(title="DrumExtract API")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 # Serve static files (frontend build)
-app.mount("/static", StaticFiles(directory="build/static"), name="static")
+# Some build outputs use `build/static` while others put assets directly under `build`.
+static_dir = Path("build/static")
+if not static_dir.exists():
+    static_dir = Path("build")
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Serve frontend SPA
 @app.get("/{full_path:path}")
