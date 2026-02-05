@@ -47,7 +47,7 @@ jobs:
       - name: Save image to archive
         run: |
           mkdir -p dist
-          IMAGE=ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.TAG }}
+          IMAGE=$(echo "ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.TAG }}" | tr '[:upper:]' '[:lower:]')
           OUT=dist/${{ steps.tag.outputs.TAG }}.tar
           docker save -o "$OUT" "$IMAGE"
           gzip -9 "$OUT"

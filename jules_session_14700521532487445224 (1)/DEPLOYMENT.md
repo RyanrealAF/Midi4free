@@ -285,10 +285,10 @@ Login and image name
 
 - The workflow logs into GitHub Container Registry (GHCR) using `github.actor` and the repository `GITHUB_TOKEN` by default — no extra repository secrets are required for most repositories. If your organization restricts `GITHUB_TOKEN` package permissions, create a Personal Access Token (PAT) with `write:packages` and set `REGISTRY_USERNAME` and `REGISTRY_PASSWORD` as repository secrets.
 
-- Default image name produced by the workflow:
+- Default image name produced by the workflow (auto-lowercased):
 
 ```
-ghcr.io/RyanrealAF/Midi4free
+ghcr.io/ryanrealaf/midi4free
 ```
 
 Notes:
