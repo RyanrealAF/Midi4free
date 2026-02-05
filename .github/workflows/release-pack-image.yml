@@ -41,7 +41,7 @@ jobs:
 
       - name: Build production image
         run: |
-          IMAGE=ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.TAG }}
+          IMAGE=$(echo "ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.TAG }}" | tr '[:upper:]' '[:lower:]')
           docker build -f Dockerfile.prod -t "$IMAGE" .
 
       - name: Save image to archive
