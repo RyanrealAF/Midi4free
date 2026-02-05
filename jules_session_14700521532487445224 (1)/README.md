@@ -2,6 +2,8 @@
 
 A full-stack web application for extracting drum tracks from audio files and converting them to MIDI.
 
+![CI](https://github.com/RyanrealAF/Midi4free/actions/workflows/docker-build-push.yml/badge.svg)
+
 ## Features
 
 - **Audio Separation**: Uses Spleeter to isolate drum tracks from full audio

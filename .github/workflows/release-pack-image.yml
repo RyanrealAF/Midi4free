@@ -1,0 +1,77 @@
+name: Package image and attach to Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag name for the release (e.g. v1.0.0)'
+        required: true
+      name:
+        description: 'Release title'
+        required: false
+      body:
+        description: 'Release notes'
+        required: false
+      prerelease:
+        description: 'Mark as prerelease'
+        required: false
+
+jobs:
+  package-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Determine tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+            echo "FROM_RELEASE=1" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+            echo "FROM_RELEASE=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build production image
+        run: |
+          IMAGE=ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.TAG }}
+          docker build -f Dockerfile.prod -t "$IMAGE" .
+
+      - name: Save image to archive
+        run: |
+          mkdir -p dist
+          IMAGE=ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.TAG }}
+          OUT=dist/${{ steps.tag.outputs.TAG }}.tar
+          docker save -o "$OUT" "$IMAGE"
+          gzip -9 "$OUT"
+
+      - name: Upload workflow artifact (packaged image)
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-${{ steps.tag.outputs.TAG }}.tar.gz
+          path: dist/${{ steps.tag.outputs.TAG }}.tar.gz
+
+      - name: Create release (when triggered manually)
+        id: create_release
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          release_name: ${{ github.event.inputs.name || github.event.inputs.tag }}
+          body: ${{ github.event.inputs.body || '' }}
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url || steps.create_release.outputs.upload_url }}
+          asset_path: dist/${{ steps.tag.outputs.TAG }}.tar.gz
+          asset_name: ${{ steps.tag.outputs.TAG }}.tar.gz
+          asset_content_type: application/gzip

@@ -50,6 +50,43 @@ docker-compose -f docker-compose.prod.yml up -d
 docker-compose -f docker-compose.prod.yml ps
 ```
 
+## Packaging Images for Offline Deployment
+
+If you need to move the container image(s) to an air-gapped or offline host, you can build and export the image to a tar (optionally compressed) file.
+
+There are helper scripts in `scripts/`:
+
+- `scripts/package_containers.sh` — POSIX shell script
+- `scripts/package_containers.bat` — Windows batch script
+
+Example (Linux/macOS):
+
+```bash
+# build and save compressed image
+IMAGE_NAME=yourrepo/drumextract:1.0 GZIP=1 ./scripts/package_containers.sh
+
+# this produces a tar.gz under `dist/` — transfer to target host
+docker load -i dist/yourrepo_drumextract_1.0.tar.gz
+```
+
+Example (Windows CMD):
+
+```bat
+set IMAGE_NAME=yourrepo/drumextract:1.0
+set OUTPUT_DIR=dist
+set GZIP=1
+scripts\package_containers.bat
+
+rem then on the target host:
+docker load -i dist\yourrepo_drumextract_1.0.tar.gz
+```
+
+Once loaded on the target host, run the production compose file as normal:
+
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
 ## Application Access
 
 Once deployed, the application will be available at:
@@ -237,3 +274,48 @@ To update the application:
 1. Pull the latest code
 2. Rebuild: `docker-compose -f docker-compose.prod.yml build --no-cache`
 3. Restart: `docker-compose -f docker-compose.prod.yml up -d`
+
+## Continuous Integration (CI)
+
+A GitHub Actions workflow is included to build and push the production image when commits are pushed to `main`.
+
+File: [.github/workflows/docker-build-push.yml](.github/workflows/docker-build-push.yml)
+
+Login and image name
+
+- The workflow logs into GitHub Container Registry (GHCR) using `github.actor` and the repository `GITHUB_TOKEN` by default — no extra repository secrets are required for most repositories. If your organization restricts `GITHUB_TOKEN` package permissions, create a Personal Access Token (PAT) with `write:packages` and set `REGISTRY_USERNAME` and `REGISTRY_PASSWORD` as repository secrets.
+
+- Default image name produced by the workflow:
+
+```
+ghcr.io/RyanrealAF/Midi4free
+```
+
+Notes:
+
+
+## Releases (packaged images)
+
+A separate workflow packages the production image into a gzipped tar and attaches it to GitHub Releases.
+
+- Workflow: [.github/workflows/release-pack-image.yml](.github/workflows/release-pack-image.yml)
+- Trigger: runs automatically when a GitHub Release is published, or can be run manually via `workflow_dispatch` (requires `tag` input).
+- Output: release asset named `<tag>.tar.gz` containing the Docker image produced from `Dockerfile.prod`.
+
+Note: the workflow also uploads the packaged image as a workflow artifact (Actions → run → Artifacts) for faster download without visiting the Release page.
+
+Usage examples:
+
+1) Publish a GitHub Release (via the GitHub UI) — the workflow will run and attach `vX.Y.Z.tar.gz` to the release.
+
+2) Manually run the workflow from Actions -> `Package image and attach to Release` and provide `tag`, `name` and release notes.
+
+After downloading on a target host, load and run:
+
+```bash
+# load image
+docker load -i v1.0.0.tar.gz
+
+# start services
+docker-compose -f docker-compose.prod.yml up -d
+```
