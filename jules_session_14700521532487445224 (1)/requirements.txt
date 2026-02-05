@@ -1,6 +1,0 @@
-fastapi>=0.100.0
-uvicorn[standard]>=0.20.0
-python-multipart>=0.0.6
-numpy<2.0.0
-spleeter==2.4.0
-basic-pitch==0.2.5
