@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs (we'll build these during the Docker build)
+build/
+dist/
+*.tgz
+*.tar.gz
+
+# Development files
+.git/
+.gitignore
+README.md
+DEPLOYMENT.md
+deploy.sh
+deploy.bat
+Dockerfile
+Dockerfile.prod
+docker-compose.yml
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python cache and test files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.pyc
+test_*.py
+*test.py
+
+# Logs and temporary files
+logs/
+*.log
+*.tmp
+*.temp
+
+# Documentation and examples
+*.md
+docs/
+examples/
+
+# Source maps and development files
+*.map
+src/
+*.ts
+*.tsx

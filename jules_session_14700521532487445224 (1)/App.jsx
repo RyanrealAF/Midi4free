@@ -1,9 +1,9 @@
 import React, { useState, Suspense, lazy } from 'react';
 import { Upload, Activity, Download, Play, Sliders, ChevronDown, Music, Volume2, X } from 'lucide-react';
 import { useAudioProcessor, ProcessingStatus } from './useAudioProcessor';
-import WaveformVisualizer from './components/WaveformVisualizer';
+import WaveformVisualizer from './WaveformVisualizer';
 
-const MidiPianoRoll = lazy(() => import('./components/MidiPianoRoll'));
+const MidiPianoRoll = lazy(() => import('./MidiPianoRoll'));
 
 const App = () => {
   const { status, progress, results, error, processFile, startMidi, reset } = useAudioProcessor();

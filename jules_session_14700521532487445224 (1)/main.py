@@ -1,6 +1,8 @@
 from fastapi import FastAPI, UploadFile, WebSocket, HTTPException, WebSocketDisconnect, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from pydantic import BaseModel
 from pathlib import Path
 import uuid
@@ -32,6 +34,29 @@ for d in [UPLOAD_DIR, OUTPUT_DIR]: d.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="DrumExtract API")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+# Serve static files (frontend build)
+app.mount("/static", StaticFiles(directory="build/static"), name="static")
+
+# Serve frontend SPA
+@app.get("/{full_path:path}")
+async def serve_frontend(full_path: str):
+    # Serve index.html for all non-API routes to support React Router
+    if full_path.startswith("api/") or full_path.startswith("ws/") or full_path.startswith("download/") or full_path.startswith("preview/"):
+        raise HTTPException(status_code=404, detail="Not Found")
+    
+    build_dir = Path("build")
+    if build_dir.exists():
+        # Try to serve the specific file first
+        requested_file = build_dir / full_path
+        if requested_file.exists() and requested_file.is_file():
+            return FileResponse(requested_file)
+    
+    # Fall back to index.html for SPA routing
+    index_path = build_dir / "index.html"
+    if index_path.exists():
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="Frontend not built")
 
 # State
 task_registry: Dict[str, Dict[str, Any]] = {}
