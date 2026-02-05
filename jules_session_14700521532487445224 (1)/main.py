@@ -170,9 +170,13 @@ async def ws_process(websocket: WebSocket, task_id: str):
             
             if task["status"] == "cancelled": break
             
-    except WebSocketDisconnect: pass
-    finally: try: await websocket.close() 
-    except: pass
+    except WebSocketDisconnect:
+        pass
+    finally:
+        try:
+            await websocket.close()
+        except:
+            pass
 
 @app.get("/status/{task_id}")
 async def get_status(task_id: str):
